@@ -1,0 +1,196 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Emotion Detection</title>
+  <link rel="stylesheet" href="/static/style.css">
+</head>
+<body>
+  <header class="topbar">
+    <h1>Emotion Detector</h1>
+    <div class="controls">
+      <button id="themeToggle" aria-label="Toggle theme">🌙</button>
+    </div>
+  </header>
+  <main class="card">
+    <div class="left">
+      <form id="uploadForm">
+        <label>Name <input id="name" name="name" placeholder="Your name"></label>
+
+        <label class="fileLabel">Choose image
+          <input id="imageInput" type="file" accept="image/*">
+        </label>
+
+        <div class="or">— OR —</div>
+        <div class="webcam">
+          <video id="video" autoplay playsinline></video>
+          <button type="button" id="captureBtn">Capture</button>
+        </div>
+
+        
+      </form>
+      <div id="status" class="status"></div>
+    </div>
+
+    <div class="right">
+      <div class="preview">
+        <div class="previewInner" id="previewArea">
+          <img id="previewImage" alt="preview" src="">
+          
+        </div>
+        <button type="button" id="sendBtn" class="primary">Detect Emotion</button>
+      </div>
+      <div class="resultCard" id="resultCard" aria-live="polite">
+        <div id="spinner" class="spinner hidden"></div>
+        <div id="resultContent" class="resultContent hidden">
+          <img id="faceCrop" src="" alt="face crop" class="faceCrop">
+          <div class="resultText" id="resultText"></div>
+          <div class="confidence" id="confidence"></div>
+        </div>
+      </div>
+    </div>
+  </main>
+
+<script>
+// Theme handling
+const themeToggle = document.getElementById('themeToggle');
+const stored = localStorage.getItem('theme') || 'dark';
+document.documentElement.setAttribute('data-theme', stored);
+themeToggle.textContent = stored === 'dark' ? '☀️' : '🌙';
+
+themeToggle.addEventListener('click', () => {
+  const current = document.documentElement.getAttribute('data-theme') === 'dark' ? 'dark' : 'light';
+  const next = current === 'dark' ? 'light' : 'dark';
+  document.documentElement.setAttribute('data-theme', next);
+  localStorage.setItem('theme', next);
+  themeToggle.textContent = next === 'dark' ? '☀️' : '🌙';
+});
+
+// Elements
+const imageInput = document.getElementById('imageInput');
+const previewImage = document.getElementById('previewImage');
+const previewArea = document.getElementById('previewArea');
+const sendBtn = document.getElementById('sendBtn');
+const nameInput = document.getElementById('name');
+const status = document.getElementById('status');
+const spinner = document.getElementById('spinner');
+const resultContent = document.getElementById('resultContent');
+const resultText = document.getElementById('resultText');
+const confidenceEl = document.getElementById('confidence');
+const faceCrop = document.getElementById('faceCrop');
+const captureBtn = document.getElementById('captureBtn');
+const video = document.getElementById('video');
+
+
+
+
+// Webcam setup
+let stream = null;
+async function startCamera(){
+  try{
+    stream = await navigator.mediaDevices.getUserMedia({video: true});
+    video.srcObject = stream;
+  }catch(e){
+    console.log('Camera not available', e);
+  }
+}
+
+function stopCamera() {
+  if (stream) {
+    stream.getTracks().forEach(track => track.stop());
+    stream = null;
+    console.log("🎥 Camera stopped");
+  }
+}
+
+// Preview file input
+imageInput.addEventListener('change', (e)=>{
+  const f = e.target.files[0];
+  if(!f) return;
+  const url = URL.createObjectURL(f);
+  previewImage.src = url;
+  previewImage.style.display = 'block';
+  resultContent.classList.add('hidden');
+  spinner.classList.add('hidden');
+});
+
+// Capture from webcam
+captureBtn.addEventListener('click', ()=>{
+  const canvas = document.createElement('canvas');
+  canvas.width = video.videoWidth || 320;
+  canvas.height = video.videoHeight || 240;
+  const ctx = canvas.getContext('2d');
+  ctx.drawImage(video, 0, 0);
+  canvas.toBlob((blob)=>{
+    const file = new File([blob], 'webcam.png', {type: 'image/png'});
+    previewImage.src = URL.createObjectURL(file);
+    previewImage.style.display = 'block';
+    // store as lastBlob for sending
+    previewImage._lastBlob = blob;
+    resultContent.classList.add('hidden');
+    spinner.classList.add('hidden');
+  }, 'image/png');
+});
+
+async function sendImage(){
+  status.textContent = '';
+  spinner.classList.remove('hidden');
+  resultContent.classList.add('hidden');
+  const fd = new FormData();
+  const name = nameInput.value || 'Anonymous';
+  fd.append('name', name);
+  // prefer file input, else last webcam blob
+  if(imageInput.files && imageInput.files[0]){
+    fd.append('image', imageInput.files[0]);
+  }else if(previewImage._lastBlob){
+    fd.append('image', new File([previewImage._lastBlob], 'webcam.png', {type: 'image/png'}));
+  }else{
+    spinner.classList.add('hidden');
+    status.textContent = 'Choose an image or capture from webcam.';
+    return;
+  }
+  try{
+    const res = await fetch('/predict', {method: 'POST', body: fd});
+    const j = await res.json();
+    spinner.classList.add('hidden');
+    if(!j.success){
+      status.textContent = j.error || 'Prediction failed';
+      return;
+    }
+    // display result
+    resultContent.classList.remove('hidden');
+    const label = j.prediction || 'unknown';
+    const conf = j.confidence || 0;
+    const emoji = mapEmoji(label);
+    resultText.innerHTML = `${emoji} <strong>${capitalize(label)}</strong>`;
+    confidenceEl.textContent = `Confidence: ${(conf*100).toFixed(1)}%`;
+    if(j.face_image){
+      faceCrop.src = '/uploads/' + j.face_image;
+      faceCrop.style.display = 'block';
+    }else{
+      faceCrop.style.display = 'none';
+    }
+  }catch(err){
+    spinner.classList.add('hidden');
+    status.textContent = 'Error: ' + err.message;
+  }
+}
+
+sendBtn.addEventListener('click', sendImage);
+window.addEventListener("load", startCamera);
+imageInput.addEventListener("change", () => {
+  stopCamera();
+});
+// helpers
+function capitalize(s){ return s.charAt(0).toUpperCase() + s.slice(1); }
+function mapEmoji(label){
+  const map = {
+    angry: '😠', disgusted: '🤢', fearful: '😨', happy: '😄',
+    neutral: '😐', sad: '😢', surprised: '😲', unknown: '❓', no_face: '🙈'
+  };
+  return map[label] || '❓';
+}
+</script>
+</body>
+</html>

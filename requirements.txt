@@ -1,0 +1,7 @@
+flask
+opencv-python
+pillow
+numpy
+requests
+# If you want model predictions locally, install tensorflow (recommended)
+# tensorflow==2.12.0
