@@ -1,18 +1,37 @@
-# Emotion Detection Web App - Final
+# Emotion Detection Web App
 
-This project is prepared for offline use. The repository contains all app code and UI. 
-Due to environment limitations, the pre-trained model file (emotion_model.h5) was not bundled here.
-Please run the included `download_model.py` locally on your machine to fetch a pre-trained `.h5` model,
-or manually download a model and place it at `models/emotion_model.h5`.
+**Author:** Daniel Bello  
 
-Example (download from HuggingFace or GitHub raw):
-python download_model.py --source "https://huggingface.co/geeknix/emotion-reg/resolve/main/emotion_model.h5"
+---
 
-After placing `models/emotion_model.h5`, install requirements and run the app:
-pip install -r requirements.txt
-python app.py
+##  Project Overview
 
-Notes:
-- If TensorFlow is not installed, the app will run in fallback mode and always return 'neutral'.
-- The app includes a theme toggle (light/dark), webcam capture, image preview, spinner, and face crop preview.
-- Hosting files for Render are included (Procfile, render.yaml).
+This project is a **web-based Emotion Detection Application** built with **Flask** and a **pre-trained deep learning model** from [Hugging Face](https://huggingface.co/dima806/facial_emotions_image_detection).  
+It analyzes a person’s facial expression from a webcam feed or uploaded image and predicts the emotion with a confidence percentage.
+
+---
+
+## 🧠 Features
+
+- Detects emotions such as **happy**, **sad**, **angry**, **neutral**, **surprised**, etc.  
+- Works with both **webcam** capture and **file uploads**.  
+- Stores each prediction (image, emotion, confidence, timestamp) in a **SQLite database**.  
+- Simple, clean UI with **light/dark mode** toggle.  
+- Can run fully **offline** using locally stored models.  
+
+---
+
+## ⚙️ Technologies Used
+
+| Component | Technology |
+|------------|-------------|
+| Frontend | HTML, CSS, JavaScript |
+| Backend | Flask (Python) |
+| AI Model | Hugging Face Transformers (PyTorch) |
+| Database | SQLite |
+| Image Processing | OpenCV, Pillow |
+| Deployment | Render (optional) |
+
+---
+
+
