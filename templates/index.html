@@ -16,16 +16,13 @@
   <main class="card">
     <div class="left">
       <form id="uploadForm">
-        <label>Name <input id="name" name="name" placeholder="Your name"></label>
-
-        <label class="fileLabel">Choose image
-          <input id="imageInput" type="file" accept="image/*">
-        </label>
+        <label for="imageInput" class="fileLabel primary">Input Image</label>
+         <input id="imageInput" type="file" accept="image/*">
 
         <div class="or">— OR —</div>
         <div class="webcam">
           <video id="video" autoplay playsinline></video>
-          <button type="button" id="captureBtn">Capture</button>
+          <button type="button" id="captureBtn"><img src="static\camera-minimalistic-svgrepo-com.svg" alt="Capture Image"/></button>
         </div>
 
         
