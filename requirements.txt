@@ -1,7 +1,11 @@
 flask
+torch
+transformers
 opencv-python
 pillow
 numpy
-requests
+sqlite3-bro
+gunicorn
+
 # If you want model predictions locally, install tensorflow (recommended)
 # tensorflow==2.12.0
