@@ -79,17 +79,27 @@ const faceCrop = document.getElementById('faceCrop');
 const captureBtn = document.getElementById('captureBtn');
 const video = document.getElementById('video');
 
-
+if (!video) {
+  console.error("Video element not found");
+}
 
 
 // Webcam setup
 let stream = null;
-async function startCamera(){
-  try{
-    stream = await navigator.mediaDevices.getUserMedia({video: true});
+
+async function startCamera() {
+  if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+    alert("Camera API not supported in this browser or context.");
+    return;
+  }
+
+  try {
+    stream = await navigator.mediaDevices.getUserMedia({ video: true });
     video.srcObject = stream;
-  }catch(e){
-    console.log('Camera not available', e);
+    await video.play();
+  } catch (e) {
+    console.error("Camera not available:", e);
+    alert("Camera access denied or unavailable.");
   }
 }
 
@@ -135,7 +145,6 @@ async function sendImage(){
   spinner.classList.remove('hidden');
   resultContent.classList.add('hidden');
   const fd = new FormData();
-  const name = nameInput.value || 'Anonymous';
   fd.append('name', name);
   // prefer file input, else last webcam blob
   if(imageInput.files && imageInput.files[0]){
@@ -176,6 +185,7 @@ async function sendImage(){
 
 sendBtn.addEventListener('click', sendImage);
 window.addEventListener("load", startCamera);
+window.addEventListener("beforeunload", stopCamera);
 imageInput.addEventListener("change", () => {
   stopCamera();
 });

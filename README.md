@@ -1,8 +1,8 @@
-# Emotion Detection Web App
+# Emotion Detection Web App 
 
-**Author:** Daniel Bello  
 
----
+Github Link:https://github.com/Punyanator/BELLO_DANIEL_EMOTION_DETECTION_WEB_APP.git
+Live Site Link:https://bello-daniel-23cg034050-emotion.onrender.com
 
 ##  Project Overview
 

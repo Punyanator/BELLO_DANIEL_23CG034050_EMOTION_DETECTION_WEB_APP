@@ -5,7 +5,7 @@ import cv2
 import torch
 from PIL import Image
 from transformers import AutoImageProcessor, AutoModelForImageClassification
-processor = AutoImageProcessor.from_pretrained("dima806/facial_emotions_image_detection")
+processor = AutoImageProcessor.from_pretrained("dima806/facial_emotions_image_detection",  use_fast=True)
 model = AutoModelForImageClassification.from_pretrained("dima806/facial_emotions_image_detection")
 
 print("✅ Hugging Face model loaded successfully!")
