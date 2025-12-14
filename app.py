@@ -3,6 +3,7 @@ import os, sqlite3, datetime, io, sys
 import cv2, numpy as np
 import cv2
 import torch
+import sqlite3
 from PIL import Image
 from transformers import AutoImageProcessor, AutoModelForImageClassification
 processor = AutoImageProcessor.from_pretrained("dima806/facial_emotions_image_detection",  use_fast=True)
