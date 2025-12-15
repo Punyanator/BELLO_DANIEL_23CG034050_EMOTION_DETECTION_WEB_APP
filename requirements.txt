@@ -1,6 +1,4 @@
 flask
-torch
-transformers
 tensorflow
 opencv-python
 pillow

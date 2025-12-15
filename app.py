@@ -2,13 +2,9 @@ from flask import Flask, render_template, request, jsonify, send_from_directory
 import os, sqlite3, datetime, io, sys
 import cv2, numpy as np
 import cv2
-#import torch
-import sqlite3
 import tensorflow as tf
 from PIL import Image
-#from transformers import AutoImageProcessor, AutoModelForImageClassification
-#processor = AutoImageProcessor.from_pretrained("dima806/facial_emotions_image_detection",  use_fast=True)
-#model = AutoModelForImageClassification.from_pretrained("dima806/facial_emotions_image_detection")
+
 
 
 APP_DIR = os.path.dirname(os.path.abspath(__file__))
@@ -20,7 +16,7 @@ UPLOAD_FOLDER = os.path.join(APP_DIR, "uploads")
 os.makedirs(UPLOAD_FOLDER, exist_ok=True)
 
 # Emotion labels expected from the model
-#EMOTIONS = ['angry', 'disgusted', 'fearful', 'happy', 'neutral', 'sad', 'surprised']
+
 EMOTIONS = ['angry', 'disgust', 'fear', 'happy', 'sad', 'surprise', 'neutral']
 print("✅ TensorFlow emotion model loaded")
 
@@ -47,17 +43,7 @@ init_db()
 def fallback_predict(face_img):
     return "neutral", 1.0
 
-#def predict_emotion(face_img):
- #   rgb = cv2.cvtColor(face_img, cv2.COLOR_BGR2RGB)
- #   img = Image.fromarray(rgb)
- #   inputs = processor(images=img, return_tensors="pt")
-  #  with torch.no_grad():
- #       outputs = model(**inputs)
- #       probs = torch.nn.functional.softmax(outputs.logits, dim=1)
- #       conf, idx = torch.max(probs, dim=1)
- #       label = model.config.id2label[idx.item()]
-  #      conf_value = round(min(conf.item(), 100.0), 2)
-   #     return label, conf_value
+
 
 def predict_emotion(face_img):
     # Convert to grayscale
