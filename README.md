@@ -2,11 +2,11 @@
 
 
 Github Link:https://github.com/Punyanator/BELLO_DANIEL_EMOTION_DETECTION_WEB_APP.git
-Live Site Link:https://bello-daniel-23cg034050-emotion.onrender.com
+Live Site Link:https://bello-daniel-emotion-detection-web-app.onrender.com
 
 ##  Project Overview
 
-This project is a **web-based Emotion Detection Application** built with **Flask** and a **pre-trained deep learning model** from [Hugging Face](https://huggingface.co/dima806/facial_emotions_image_detection).  
+This project is a **web-based Emotion Detection Application** built with **Flask** and a **pre-trained deep learning model** from Tensorflow.  
 It analyzes a person’s facial expression from a webcam feed or uploaded image and predicts the emotion with a confidence percentage.
 
 ---
@@ -27,7 +27,7 @@ It analyzes a person’s facial expression from a webcam feed or uploaded image 
 |------------|-------------|
 | Frontend | HTML, CSS, JavaScript |
 | Backend | Flask (Python) |
-| AI Model | Hugging Face Transformers (PyTorch) |
+| AI Model | TensorFlow  Keras |
 | Database | SQLite |
 | Image Processing | OpenCV, Pillow |
 | Deployment | Render (optional) |
