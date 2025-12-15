@@ -2,23 +2,27 @@ from flask import Flask, render_template, request, jsonify, send_from_directory
 import os, sqlite3, datetime, io, sys
 import cv2, numpy as np
 import cv2
-import torch
+#import torch
 import sqlite3
+import tensorflow as tf
 from PIL import Image
-from transformers import AutoImageProcessor, AutoModelForImageClassification
-processor = AutoImageProcessor.from_pretrained("dima806/facial_emotions_image_detection",  use_fast=True)
-model = AutoModelForImageClassification.from_pretrained("dima806/facial_emotions_image_detection")
+#from transformers import AutoImageProcessor, AutoModelForImageClassification
+#processor = AutoImageProcessor.from_pretrained("dima806/facial_emotions_image_detection",  use_fast=True)
+#model = AutoModelForImageClassification.from_pretrained("dima806/facial_emotions_image_detection")
 
-print("✅ Hugging Face model loaded successfully!")
 
 APP_DIR = os.path.dirname(os.path.abspath(__file__))
 MODEL_PATH = os.path.join(APP_DIR, "models", "emotion_model.h5")
+model = tf.keras.models.load_model(MODEL_PATH, compile=False)
+
 DB_PATH = os.path.join(APP_DIR, "data", "users.db")
 UPLOAD_FOLDER = os.path.join(APP_DIR, "uploads")
 os.makedirs(UPLOAD_FOLDER, exist_ok=True)
 
 # Emotion labels expected from the model
-EMOTIONS = ['angry', 'disgusted', 'fearful', 'happy', 'neutral', 'sad', 'surprised']
+#EMOTIONS = ['angry', 'disgusted', 'fearful', 'happy', 'neutral', 'sad', 'surprised']
+EMOTIONS = ['angry', 'disgust', 'fear', 'happy', 'sad', 'surprise', 'neutral']
+print("✅ TensorFlow emotion model loaded")
 
 app = Flask(__name__, static_folder='static', template_folder='templates')
 
@@ -43,17 +47,42 @@ init_db()
 def fallback_predict(face_img):
     return "neutral", 1.0
 
+#def predict_emotion(face_img):
+ #   rgb = cv2.cvtColor(face_img, cv2.COLOR_BGR2RGB)
+ #   img = Image.fromarray(rgb)
+ #   inputs = processor(images=img, return_tensors="pt")
+  #  with torch.no_grad():
+ #       outputs = model(**inputs)
+ #       probs = torch.nn.functional.softmax(outputs.logits, dim=1)
+ #       conf, idx = torch.max(probs, dim=1)
+ #       label = model.config.id2label[idx.item()]
+  #      conf_value = round(min(conf.item(), 100.0), 2)
+   #     return label, conf_value
+
 def predict_emotion(face_img):
-    rgb = cv2.cvtColor(face_img, cv2.COLOR_BGR2RGB)
-    img = Image.fromarray(rgb)
-    inputs = processor(images=img, return_tensors="pt")
-    with torch.no_grad():
-        outputs = model(**inputs)
-        probs = torch.nn.functional.softmax(outputs.logits, dim=1)
-        conf, idx = torch.max(probs, dim=1)
-        label = model.config.id2label[idx.item()]
-        conf_value = round(min(conf.item(), 100.0), 2)
-        return label, conf_value
+    # Convert to grayscale
+    gray = cv2.cvtColor(face_img, cv2.COLOR_BGR2GRAY)
+
+    # Resize to MODEL EXPECTED SIZE (64x64)
+    face_resized = cv2.resize(gray, (64, 64), interpolation=cv2.INTER_AREA)
+
+    # Improve contrast
+    face_resized = cv2.equalizeHist(face_resized)
+
+    # Normalize
+    face_resized = face_resized.astype("float32") / 255.0
+
+    # Add batch + channel dimensions
+    face_input = np.reshape(face_resized, (1, 64, 64, 1))
+
+    # Predict
+    preds = model.predict(face_input, verbose=0)[0]
+
+    idx = np.argmax(preds)
+    confidence = float(preds[idx]) 
+
+    return EMOTIONS[idx], round(confidence, 2)
+
 
 
 
@@ -78,7 +107,13 @@ def predict():
         return jsonify(success=False, error="Unable to read uploaded image"), 400
     gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
     face_cascade = cv2.CascadeClassifier(cv2.data.haarcascades + 'haarcascade_frontalface_default.xml')
-    faces = face_cascade.detectMultiScale(gray, scaleFactor=1.1, minNeighbors=5)
+    faces = face_cascade.detectMultiScale(
+    gray,
+    scaleFactor=1.2,
+    minNeighbors=3,
+    minSize=(48, 48)
+)
+
     if len(faces) == 0:
         # store record with no face
         conn = sqlite3.connect(DB_PATH)
